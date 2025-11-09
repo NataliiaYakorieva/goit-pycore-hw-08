@@ -169,14 +169,15 @@ class AddressBook(UserDict):
 def input_error(func):
     """
     Decorator for handling input errors and displaying informative messages.
+    Now also handles AttributeError for missing contacts.
     """
-
     def wrapper(*args, **kwargs):
         try:
             return func(*args, **kwargs)
+        except AttributeError:
+            return "Error: Contact not found"
         except (KeyError, ValueError, IndexError) as e:
             return f"Error: {str(e)}"
-
     return wrapper
 
 
@@ -202,8 +203,6 @@ def change_contact(args, book: AddressBook):
         raise ValueError("Usage: change [name] [old_phone] [new_phone]")
     name, old_phone, new_phone, *_ = args
     record = book.find(name)
-    if record is None:
-        raise KeyError("Contact not found")
     record.edit_phone(old_phone, new_phone)
     return "Phone updated."
 
@@ -214,8 +213,6 @@ def show_phones(args, book: AddressBook):
         raise ValueError("Usage: phone [name]")
     name, *_ = args
     record = book.find(name)
-    if record is None:
-        raise KeyError("Contact not found")
     if not record.phones:
         return "No phones found."
     return "; ".join([p.value for p in record.phones])
@@ -243,8 +240,6 @@ def add_birthday(args, book: AddressBook):
         raise ValueError("Usage: add-birthday [name] [DD.MM.YYYY]")
     name, birthday, *_ = args
     record = book.find(name)
-    if record is None:
-        raise KeyError("Contact not found")
     record.add_birthday(birthday)
     return "Birthday added."
 
@@ -255,8 +250,6 @@ def show_birthday(args, book: AddressBook):
         raise ValueError("Usage: show-birthday [name]")
     name, *_ = args
     record = book.find(name)
-    if record is None:
-        raise KeyError("Contact not found")
     if not record.birthday:
         return "No birthday set."
     return record.birthday.value.strftime("%d.%m.%Y")
